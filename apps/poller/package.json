@@ -1,0 +1,13 @@
+{
+  "name": "@bluehouse/poller",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "poll": "bun src/index.ts"
+  },
+  "dependencies": {
+    "@bluehouse/shared": "workspace:*",
+    "drizzle-orm": "^1.0.0-rc.4",
+    "zod": "^4.4.3"
+  }
+}

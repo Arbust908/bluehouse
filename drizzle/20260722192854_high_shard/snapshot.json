@@ -1,0 +1,433 @@
+{
+  "version": "8",
+  "dialect": "postgres",
+  "id": "7afe8c57-b77d-442d-9977-4f2a14d9dcea",
+  "prevIds": [
+    "00000000-0000-0000-0000-000000000000"
+  ],
+  "ddl": [
+    {
+      "values": [
+        "oficial",
+        "blue",
+        "bolsa",
+        "contadoconliqui",
+        "mayorista",
+        "cripto",
+        "tarjeta"
+      ],
+      "name": "casa",
+      "entityType": "enums",
+      "schema": "public"
+    },
+    {
+      "values": [
+        "USD",
+        "ARS"
+      ],
+      "name": "currency",
+      "entityType": "enums",
+      "schema": "public"
+    },
+    {
+      "values": [
+        "running",
+        "success",
+        "failed",
+        "skipped"
+      ],
+      "name": "poll_status",
+      "entityType": "enums",
+      "schema": "public"
+    },
+    {
+      "values": [
+        "dolarapi",
+        "ambito"
+      ],
+      "name": "provider",
+      "entityType": "enums",
+      "schema": "public"
+    },
+    {
+      "isRlsEnabled": false,
+      "name": "poll_runs",
+      "entityType": "tables",
+      "schema": "public"
+    },
+    {
+      "isRlsEnabled": false,
+      "name": "rate_observations",
+      "entityType": "tables",
+      "schema": "public"
+    },
+    {
+      "type": "uuid",
+      "typeSchema": null,
+      "notNull": true,
+      "dimensions": 0,
+      "default": "uuidv7()",
+      "generated": null,
+      "identity": null,
+      "name": "id",
+      "entityType": "columns",
+      "schema": "public",
+      "table": "poll_runs"
+    },
+    {
+      "type": "poll_status",
+      "typeSchema": "public",
+      "notNull": true,
+      "dimensions": 0,
+      "default": null,
+      "generated": null,
+      "identity": null,
+      "name": "status",
+      "entityType": "columns",
+      "schema": "public",
+      "table": "poll_runs"
+    },
+    {
+      "type": "timestamp with time zone",
+      "typeSchema": null,
+      "notNull": true,
+      "dimensions": 0,
+      "default": "now()",
+      "generated": null,
+      "identity": null,
+      "name": "started_at",
+      "entityType": "columns",
+      "schema": "public",
+      "table": "poll_runs"
+    },
+    {
+      "type": "timestamp with time zone",
+      "typeSchema": null,
+      "notNull": false,
+      "dimensions": 0,
+      "default": null,
+      "generated": null,
+      "identity": null,
+      "name": "completed_at",
+      "entityType": "columns",
+      "schema": "public",
+      "table": "poll_runs"
+    },
+    {
+      "type": "bigint",
+      "typeSchema": null,
+      "notNull": false,
+      "dimensions": 0,
+      "default": null,
+      "generated": null,
+      "identity": null,
+      "name": "upstream_status",
+      "entityType": "columns",
+      "schema": "public",
+      "table": "poll_runs"
+    },
+    {
+      "type": "bigint",
+      "typeSchema": null,
+      "notNull": false,
+      "dimensions": 0,
+      "default": null,
+      "generated": null,
+      "identity": null,
+      "name": "rows_received",
+      "entityType": "columns",
+      "schema": "public",
+      "table": "poll_runs"
+    },
+    {
+      "type": "bigint",
+      "typeSchema": null,
+      "notNull": false,
+      "dimensions": 0,
+      "default": null,
+      "generated": null,
+      "identity": null,
+      "name": "rows_inserted",
+      "entityType": "columns",
+      "schema": "public",
+      "table": "poll_runs"
+    },
+    {
+      "type": "text",
+      "typeSchema": null,
+      "notNull": false,
+      "dimensions": 0,
+      "default": null,
+      "generated": null,
+      "identity": null,
+      "name": "error_code",
+      "entityType": "columns",
+      "schema": "public",
+      "table": "poll_runs"
+    },
+    {
+      "type": "text",
+      "typeSchema": null,
+      "notNull": false,
+      "dimensions": 0,
+      "default": null,
+      "generated": null,
+      "identity": null,
+      "name": "error_message",
+      "entityType": "columns",
+      "schema": "public",
+      "table": "poll_runs"
+    },
+    {
+      "type": "uuid",
+      "typeSchema": null,
+      "notNull": true,
+      "dimensions": 0,
+      "default": "uuidv7()",
+      "generated": null,
+      "identity": null,
+      "name": "id",
+      "entityType": "columns",
+      "schema": "public",
+      "table": "rate_observations"
+    },
+    {
+      "type": "uuid",
+      "typeSchema": null,
+      "notNull": true,
+      "dimensions": 0,
+      "default": null,
+      "generated": null,
+      "identity": null,
+      "name": "poll_run_id",
+      "entityType": "columns",
+      "schema": "public",
+      "table": "rate_observations"
+    },
+    {
+      "type": "currency",
+      "typeSchema": "public",
+      "notNull": true,
+      "dimensions": 0,
+      "default": "'USD'",
+      "generated": null,
+      "identity": null,
+      "name": "currency",
+      "entityType": "columns",
+      "schema": "public",
+      "table": "rate_observations"
+    },
+    {
+      "type": "provider",
+      "typeSchema": "public",
+      "notNull": true,
+      "dimensions": 0,
+      "default": null,
+      "generated": null,
+      "identity": null,
+      "name": "provider",
+      "entityType": "columns",
+      "schema": "public",
+      "table": "rate_observations"
+    },
+    {
+      "type": "casa",
+      "typeSchema": "public",
+      "notNull": true,
+      "dimensions": 0,
+      "default": null,
+      "generated": null,
+      "identity": null,
+      "name": "casa",
+      "entityType": "columns",
+      "schema": "public",
+      "table": "rate_observations"
+    },
+    {
+      "type": "text",
+      "typeSchema": null,
+      "notNull": true,
+      "dimensions": 0,
+      "default": null,
+      "generated": null,
+      "identity": null,
+      "name": "name",
+      "entityType": "columns",
+      "schema": "public",
+      "table": "rate_observations"
+    },
+    {
+      "type": "text",
+      "typeSchema": null,
+      "notNull": true,
+      "dimensions": 0,
+      "default": null,
+      "generated": null,
+      "identity": null,
+      "name": "source_fingerprint",
+      "entityType": "columns",
+      "schema": "public",
+      "table": "rate_observations"
+    },
+    {
+      "type": "numeric(14,4)",
+      "typeSchema": null,
+      "notNull": false,
+      "dimensions": 0,
+      "default": null,
+      "generated": null,
+      "identity": null,
+      "name": "buy",
+      "entityType": "columns",
+      "schema": "public",
+      "table": "rate_observations"
+    },
+    {
+      "type": "numeric(14,4)",
+      "typeSchema": null,
+      "notNull": false,
+      "dimensions": 0,
+      "default": null,
+      "generated": null,
+      "identity": null,
+      "name": "sell",
+      "entityType": "columns",
+      "schema": "public",
+      "table": "rate_observations"
+    },
+    {
+      "type": "timestamp with time zone",
+      "typeSchema": null,
+      "notNull": true,
+      "dimensions": 0,
+      "default": null,
+      "generated": null,
+      "identity": null,
+      "name": "upstream_updated_at",
+      "entityType": "columns",
+      "schema": "public",
+      "table": "rate_observations"
+    },
+    {
+      "type": "timestamp with time zone",
+      "typeSchema": null,
+      "notNull": true,
+      "dimensions": 0,
+      "default": "now()",
+      "generated": null,
+      "identity": null,
+      "name": "observed_at",
+      "entityType": "columns",
+      "schema": "public",
+      "table": "rate_observations"
+    },
+    {
+      "nameExplicit": true,
+      "columns": [
+        {
+          "value": "source_fingerprint",
+          "isExpression": false,
+          "asc": true,
+          "nullsFirst": false,
+          "opclass": null
+        }
+      ],
+      "isUnique": true,
+      "where": null,
+      "with": "",
+      "method": "btree",
+      "concurrently": false,
+      "name": "rate_observations_source_fingerprint_unique",
+      "entityType": "indexes",
+      "schema": "public",
+      "table": "rate_observations"
+    },
+    {
+      "nameExplicit": true,
+      "columns": [
+        {
+          "value": "casa",
+          "isExpression": false,
+          "asc": true,
+          "nullsFirst": false,
+          "opclass": null
+        },
+        {
+          "value": "observed_at",
+          "isExpression": false,
+          "asc": true,
+          "nullsFirst": false,
+          "opclass": null
+        }
+      ],
+      "isUnique": false,
+      "where": null,
+      "with": "",
+      "method": "btree",
+      "concurrently": false,
+      "name": "rate_observations_casa_observed_at_idx",
+      "entityType": "indexes",
+      "schema": "public",
+      "table": "rate_observations"
+    },
+    {
+      "nameExplicit": true,
+      "columns": [
+        {
+          "value": "upstream_updated_at",
+          "isExpression": false,
+          "asc": true,
+          "nullsFirst": false,
+          "opclass": null
+        }
+      ],
+      "isUnique": false,
+      "where": null,
+      "with": "",
+      "method": "btree",
+      "concurrently": false,
+      "name": "rate_observations_upstream_updated_at_idx",
+      "entityType": "indexes",
+      "schema": "public",
+      "table": "rate_observations"
+    },
+    {
+      "nameExplicit": false,
+      "columns": [
+        "poll_run_id"
+      ],
+      "schemaTo": "public",
+      "tableTo": "poll_runs",
+      "columnsTo": [
+        "id"
+      ],
+      "onUpdate": "NO ACTION",
+      "onDelete": "NO ACTION",
+      "name": "rate_observations_poll_run_id_poll_runs_id_fkey",
+      "entityType": "fks",
+      "schema": "public",
+      "table": "rate_observations"
+    },
+    {
+      "columns": [
+        "id"
+      ],
+      "nameExplicit": false,
+      "name": "poll_runs_pkey",
+      "schema": "public",
+      "table": "poll_runs",
+      "entityType": "pks"
+    },
+    {
+      "columns": [
+        "id"
+      ],
+      "nameExplicit": false,
+      "name": "rate_observations_pkey",
+      "schema": "public",
+      "table": "rate_observations",
+      "entityType": "pks"
+    }
+  ],
+  "renames": []
+}

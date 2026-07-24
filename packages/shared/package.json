@@ -1,0 +1,16 @@
+{
+  "name": "@bluehouse/shared",
+  "private": true,
+  "type": "module",
+  "exports": {
+    "./constants": "./src/constants.ts",
+    "./db/schema": "./src/db/schema.ts",
+    "./domain": "./src/domain.ts",
+    "./format": "./src/format.ts",
+    "./validators": "./src/validators.ts"
+  },
+  "dependencies": {
+    "drizzle-orm": "^1.0.0-rc.4",
+    "zod": "^4.4.3"
+  }
+}

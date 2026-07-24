@@ -1,0 +1,15 @@
+.env
+.env.*
+!.env.example
+docker-compose*.yml
+*.md
+.git
+.gitignore
+node_modules
+dist
+out
+*.tgz
+.DS_Store
+Screenshot*.png
+.idea
+coverage
