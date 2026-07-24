@@ -15,4 +15,5 @@ COPY apps/poller apps/poller
 COPY packages/shared packages/shared
 COPY drizzle drizzle
 COPY tsconfig.json ./
-CMD ["sleep", "infinity"]
+RUN bun install --frozen-lockfile --production
+CMD ["bun", "run", "poll"]

@@ -15,5 +15,14 @@ services:
       timeout: 3s
       retries: 10
 
+  bluehouse-poller:
+    image: bluehouse-poller:local
+    depends_on:
+      postgres:
+        condition: service_healthy
+    environment:
+      DATABASE_URL: postgresql://bluehouse:bluehouse@postgres:5432/bluehouse
+    command: sleep infinity
+
 volumes:
   postgres_data:
