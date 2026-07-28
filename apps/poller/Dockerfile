@@ -16,4 +16,4 @@ COPY packages/shared packages/shared
 COPY drizzle drizzle
 COPY tsconfig.json ./
 RUN bun install --frozen-lockfile --production
-CMD ["bun", "run", "poll"]
+CMD ["sleep", "infinity"]
