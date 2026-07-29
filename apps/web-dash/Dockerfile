@@ -4,7 +4,7 @@ WORKDIR /repo
 COPY package.json bun.lock ./
 COPY apps/web-dash/package.json apps/web-dash/
 COPY packages/shared/package.json packages/shared/
-RUN bun install --frozen-lockfile
+RUN bun install
 
 # Step 2: copy
 COPY apps/web-dash ./apps/web-dash
