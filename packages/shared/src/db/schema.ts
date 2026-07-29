@@ -20,8 +20,10 @@ export const casaEnum = pgEnum("casa", [
   "cripto",
   "tarjeta",
 ]);
+export type CasaTypes = (typeof casaEnum.enumValues)[number];
 
 export const currencyEnum = pgEnum("currency", ["USD", "ARS"]);
+export type CurrencyTypes = (typeof currencyEnum.enumValues)[number];
 
 export const providerEnum = pgEnum("provider", [
   "dolarapi",
@@ -34,6 +36,7 @@ export const pollStatusEnum = pgEnum("poll_status", [
   "failed",
   "skipped",
 ]);
+export type PollStatus = (typeof pollStatusEnum.enumValues)[number];
 
 export const pollRuns = pgTable("poll_runs", {
   id: uuid("id").primaryKey().default(sql`uuidv7()`),
