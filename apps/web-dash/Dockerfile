@@ -2,16 +2,17 @@
 FROM oven/bun:1 AS builder
 WORKDIR /repo
 COPY package.json bun.lock ./
+COPY apps/poller/package.json apps/poller/
 COPY apps/web-dash/package.json apps/web-dash/
 COPY packages/shared/package.json packages/shared/
-RUN bun install
+RUN bun install --frozen-lockfile
 
 # Step 2: copy
 COPY apps/web-dash ./apps/web-dash
 COPY packages/shared ./packages/shared
 
 ENV NITRO_PRESET=bun
-RUN bun --cwd apps/web-dash run build
+RUN bun run --cwd apps/web-dash build
 
 # Stage 3: runtime
 FROM oven/bun:1-slim AS runtime
