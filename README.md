@@ -11,6 +11,7 @@ Start PostgreSQL 18 and run the migrations:
 ```bash
 cp .env.local.example .env.local
 docker compose -f docker-compose.local.yml up -d --wait
+docker compose -f docker-compose.local.yml up -d --wait postgres
 bun run db:migrate
 ```
 

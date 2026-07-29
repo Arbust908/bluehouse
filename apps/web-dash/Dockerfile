@@ -5,14 +5,15 @@ COPY package.json bun.lock ./
 COPY apps/poller/package.json apps/poller/
 COPY apps/web-dash/package.json apps/web-dash/
 COPY packages/shared/package.json packages/shared/
-RUN bun install --frozen-lockfile
+RUN bun install --frozen-lockfile --filter @bluehouse/web-dash
 
 # Step 2: copy
 COPY apps/web-dash ./apps/web-dash
 COPY packages/shared ./packages/shared
 
 ENV NITRO_PRESET=bun
-RUN bun run --cwd apps/web-dash build
+ENV NODE_OPTIONS=--max-old-space-size=512
+RUN bun run --smol --cwd apps/web-dash build
 
 # Stage 3: runtime
 FROM oven/bun:1-slim AS runtime
@@ -24,4 +25,4 @@ COPY --from=builder --chown=bun:bun \
   /repo/apps/web-dash/.output ./.output
 USER bun
 EXPOSE 3000
-CMD ["bun", "run", "./server/index.mjs"]
+CMD ["bun", "run", "./.output/server/index.mjs"]
