@@ -37,8 +37,9 @@
         </ul>
         <div class="min-h-96">
           <LineChart :data="chartData" :categories="chartCategories" :height="360" :x-formatter="xFormatter"
-            :y-formatter="yFormatter" :x-num-ticks="Math.min(chartData.length, 6)" :y-num-ticks="5" :y-grid-line="true"
-            :line-width="2" :duration="180" :hide-legend="true" />
+            :y-formatter="yFormatter" :tooltip-title-formatter="tooltipTitleFormatter"
+            :x-num-ticks="Math.min(chartData.length, 6)" :y-num-ticks="5" :y-grid-line="true" :line-width="2"
+            :duration="180" :hide-legend="true" />
         </div>
       </div>
       <p v-else class="py-8 text-sm text-zinc-500 dark:text-slate-500">
@@ -96,5 +97,6 @@ const xFormatter = (index: number) => {
   const timestamp = chartData.value[index]?.timestamp
   return typeof timestamp === 'number' ? axisDateFormatter.format(timestamp) : ''
 }
+const tooltipTitleFormatter = (data: Record<string, number>) => axisDateFormatter.format(data.timestamp)
 const yFormatter = (value: number) => axisCurrencyFormatter.format(value)
 </script>

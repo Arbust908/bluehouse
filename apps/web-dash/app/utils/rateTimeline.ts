@@ -4,7 +4,7 @@ export interface TimelineRateObservation {
   casa: HouseName;
   buy: string | null;
   sell: string | null;
-  observedAt: Date | string;
+  upstreamUpdatedAt: Date | string;
 }
 
 export function buildRateTimeline(observations: readonly TimelineRateObservation[]) {
@@ -15,7 +15,7 @@ export function buildRateTimeline(observations: readonly TimelineRateObservation
 
     const buy = Number(rate.buy)
     const sell = Number(rate.sell)
-    const timestamp = new Date(rate.observedAt).getTime()
+    const timestamp = new Date(rate.upstreamUpdatedAt).getTime()
     if (!Number.isFinite(buy) || !Number.isFinite(sell) || !Number.isFinite(timestamp)) continue
 
     const changes = changesByTimestamp.get(timestamp) ?? new Map<HouseName, number>()
