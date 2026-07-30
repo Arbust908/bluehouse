@@ -1,59 +1,13 @@
 <template>
   <div v-if="rateCards.length" class="space-y-5">
-    <div class="grid gap-3 md:grid-cols-2">
-      <article v-for="card in primaryRates" :key="card.casa"
-        class="rounded-xl border border-(--color-rule) bg-(--color-surface) p-5 sm:p-6">
-        <div class="flex items-start justify-between gap-4">
-          <div>
-            <h3 class="text-xs font-semibold uppercase tracking-[0.08em] text-(--color-muted)">{{ card.title }}</h3>
-            <p class="numeric mt-5 text-[clamp(2rem,7vw,3.25rem) font-semibold leading-none tracking-[-0.055em]">
-              {{ card.value }}
-            </p>
-          </div>
-          <span
-            class="rounded-full bg-(--color-accent-soft) px-2.5 py-1 text-[0.6875rem] font-semibold uppercase tracking-[0.08em] text-(--color-muted)">
-            Promedio
-          </span>
-        </div>
-        <dl class="numeric mt-6 flex gap-6 border-t border-(--color-rule) pt-4 text-sm">
-          <div>
-            <dt class="text-xs text-(--color-muted)">Compra</dt>
-            <dd class="mt-0.5 font-semibold">{{ card.buy }}</dd>
-          </div>
-          <div>
-            <dt class="text-xs text-(--color-muted)">Venta</dt>
-            <dd class="mt-0.5 font-semibold">{{ card.sell }}</dd>
-          </div>
-        </dl>
-      </article>
-    </div>
-
-    <div class="border-y border-(--color-rule)">
-      <div
-        class="hidden grid-cols-[minmax(0,1.3fr)_repeat(3,minmax(0,1fr)) gap-4 border-b border-(--color-rule) py-2.5 text-right text-[0.6875rem] font-semibold uppercase tracking-[0.08em] text-(--color-muted) sm:grid">
-        <span class="text-left">Tipo</span>
-        <span>Promedio</span>
-        <span>Compra</span>
-        <span>Venta</span>
-      </div>
-      <article v-for="card in secondaryRates" :key="card.casa"
-        class="grid grid-cols-[minmax(0,1fr)_auto] gap-x-5 gap-y-2 border-b border-(--color-rule) py-4 last:border-b-0 sm:grid-cols-[minmax(0,1.3fr)_repeat(3,minmax(0,1fr))] sm:items-center sm:gap-4">
-        <h3 class="font-semibold tracking-[-0.015em]">{{ card.title }}</h3>
-        <p class="numeric text-right text-lg font-semibold tracking-tight sm:text-sm">{{ card.value }}</p>
-        <dl class="numeric col-span-2 grid grid-cols-2 gap-5 text-sm sm:contents">
-          <div class="flex items-baseline justify-between gap-3 sm:block sm:text-right">
-            <dt class="text-xs text-(--color-muted) sm:sr-only">Compra</dt>
-            <dd>{{ card.buy }}</dd>
-          </div>
-          <div class="flex items-baseline justify-between gap-3 sm:block sm:text-right">
-            <dt class="text-xs text-(--color-muted) sm:sr-only">Venta</dt>
-            <dd>{{ card.sell }}</dd>
-          </div>
-        </dl>
-      </article>
+    <div class="grid gap-3 md:grid-cols-[repeat(auto-fill,minmax(12rem,1fr))] md:items-center">
+      <RatesFeatureCard v-for="card in primaryRates" :key="card.casa" :title="card.title" :value="card.value"
+        :buy="card.buy" :sell="card.sell" class="col-span-2" />
+      <RatesRegularCard v-for="card in secondaryRates" :key="card.casa" :title="card.title" :value="card.value"
+        :buy="card.buy" :sell="card.sell" />
     </div>
   </div>
-  <p v-else class="border-y border-(--color-rule) py-8 text-sm text-(--color-muted)">
+  <p v-else class="border-y border-zinc-300 dark:border-slate-700 py-8 text-sm text-zinc-500 dark:text-slate-500">
     Todavía no hay cotizaciones disponibles.
   </p>
 </template>

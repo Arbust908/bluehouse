@@ -1,16 +1,17 @@
 <template>
   <button ref="themeButton" type="button"
-    class="grid size-10 place-items-center rounded-full border border-[var(--color-rule)] text-[var(--color-muted)] transition-colors duration-200 hover:border-[var(--color-accent)] hover:bg-[var(--color-accent-soft)] hover:text-[var(--color-ink)]"
+    class="grid size-10 place-items-center rounded-full border border-zinc-300 dark:border-slate-700 text-zinc-500 dark:text-slate-200 transition-colors duration-200 hover:border-indigo-500 hover:text-zinc-800 hover:dark:text-slate-300"
     :aria-label="isDark ? 'Activar tema claro' : 'Activar tema oscuro'" :aria-pressed="isDark"
     :title="isDark ? 'Activar tema claro' : 'Activar tema oscuro'" @click="toggleTheme">
     <Transition name="theme-icon" mode="out-in">
-      <svg v-if="isDark" key="sun" aria-hidden="true" class="size-[1.125rem]" viewBox="0 0 24 24" fill="none"
+      <svg v-if="isDark" key="sun" aria-hidden="true" class="size-4" viewBox="0 0 24 24" fill="none"
         stroke="currentColor" stroke-width="1.8" stroke-linecap="round">
         <circle cx="12" cy="12" r="4" />
-        <path d="M12 2v2M12 20v2M4.93 4.93l1.42 1.42M17.65 17.65l1.42 1.42M2 12h2M20 12h2M4.93 19.07l1.42-1.42M17.65 6.35l1.42-1.42" />
+        <path
+          d="M12 2v2M12 20v2M4.93 4.93l1.42 1.42M17.65 17.65l1.42 1.42M2 12h2M20 12h2M4.93 19.07l1.42-1.42M17.65 6.35l1.42-1.42" />
       </svg>
-      <svg v-else key="moon" aria-hidden="true" class="size-[1.125rem]" viewBox="0 0 24 24" fill="none"
-        stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+      <svg v-else key="moon" aria-hidden="true" class="size-4" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+        stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
         <path d="M20.4 15.2A8.5 8.5 0 0 1 8.8 3.6 8.5 8.5 0 1 0 20.4 15.2Z" />
       </svg>
     </Transition>

@@ -1,15 +1,14 @@
 <template>
-  <dl class="grid border-y border-[var(--color-rule)] sm:grid-cols-2">
+  <dl class="grid border-y border-zinc-300 dark:border-slate-700 sm:grid-cols-2">
     <div v-for="(item, index) in runSummaryItems" :key="item.label"
       class="flex items-center justify-between gap-5 py-3.5 sm:px-5"
-      :class="index === 0 ? 'border-b border-[var(--color-rule)] sm:border-r sm:border-b-0 sm:pl-0' : 'sm:pr-0'">
-      <dt class="flex items-center gap-2 text-xs font-semibold uppercase tracking-[0.08em] text-[var(--color-muted)]">
-        <span class="size-1.5 rounded-full" :class="item.available ? 'bg-[var(--color-positive)]' : 'bg-[var(--color-muted)]'" />
+      :class="index === 0 ? 'border-b border-zinc-300 dark:border-slate-700 sm:border-r sm:border-b-0 sm:pl-0' : 'sm:pr-0'">
+      <dt class="flex items-center gap-2 text-xs uppercase tracking-tight text-zinc-600 dark:text-slate-300">
         {{ item.label }}
       </dt>
-      <dd class="numeric text-right text-sm font-semibold text-[var(--color-ink)]">
+      <dd class="numeric text-right text-sm font-bold text-zinc-800 dark:text-slate-200">
         {{ item.value }}
-        <span class="ml-1 hidden font-normal text-[var(--color-muted)] lg:inline">{{ item.detail }}</span>
+        <span class="ml-1 hidden font-normal text-zinc-500 dark:text-slate-500 lg:inline">{{ item.detail }}</span>
       </dd>
     </div>
   </dl>
