@@ -137,7 +137,7 @@ describe("Ámbito historical response formatting", () => {
     [HOUSE_NAMES.BOLSA, "Referencia"],
     [HOUSE_NAMES.CONTADO_CON_LIQUI, "Referencia"],
     [HOUSE_NAMES.TARJETA, "Venta"],
-  ] as const)("normalizes the single-value %s series as sell", (house, label) => {
+  ] as const)("copies the single-value %s series to buy and sell", (house, label) => {
     const result = formatAmbitoHistoricalDataToDolarApiFormat(
       [["Fecha", label], ["03/07/2026", "1.524,53"]],
       house,
@@ -145,7 +145,7 @@ describe("Ámbito historical response formatting", () => {
 
     expect(result[0]).toMatchObject({
       casa: house,
-      compra: null,
+      compra: 1524.53,
       venta: 1524.53,
     });
   });

@@ -154,12 +154,15 @@ export function formatAmbitoHistoricalDataToDolarApiFormat(
   return dolarApiRateSchema.array().parse(
     rows.map((row) => {
       const [fecha, firstValue, secondValue] = row;
+      const buy = parseLocalizedNumber(firstValue);
+      const sell = parseLocalizedNumber(secondValue ?? firstValue);
+
       return {
         moneda: CURRENCY_NAMES.USD,
         casa: parsedCasa,
         nombre: HOUSE_DISPLAY_NAMES[parsedCasa],
-        compra: singleValue ? null : parseLocalizedNumber(firstValue),
-        venta: parseLocalizedNumber(secondValue ?? firstValue),
+        compra: buy,
+        venta: sell,
         fechaActualizacion: toBuenosAiresMidnightIso(fecha),
       };
     }),
