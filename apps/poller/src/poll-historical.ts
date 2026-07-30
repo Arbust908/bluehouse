@@ -1,52 +1,49 @@
-import { eq } from "drizzle-orm";
+import { and, desc, eq } from "drizzle-orm";
 import {
-  historicalRuns,
-  rateObservations,
-} from "@bluehouse/shared/db/schema";
-import { datesToRangeString, getNextDateRangeFromRangeString, rangeStringToDates } from "@bluehouse/shared/format";
+  HOUSE_NAMES,
+  POLL_STATUS,
+  PROVIDER_NAMES,
+  type HouseName,
+} from "@bluehouse/shared/constants";
+import { pollRuns, rateObservations } from "@bluehouse/shared/db/schema";
+import type { DateRange } from "@bluehouse/shared/format";
 import { db } from "./db";
-import { createObservationFingerprint } from "./fingerprint";
-import { HOUSE_NAMES, PROVIDER_NAMES, type HouseName } from "@bluehouse/shared/constants";
 import { fetchHistory } from "./fetch-history";
+import { createObservationFingerprint } from "./fingerprint";
+import { getHistoricalRange } from "./historical-range";
 
-type PollDatabase = Pick<typeof db, "insert" | "transaction" | "update" | "select">;
+type PollDatabase = Pick<
+  typeof db,
+  "insert" | "transaction" | "update" | "select"
+>;
 
-export interface PollResult {
+export interface HistoricalPollResult extends DateRange {
   runId: string;
+  house: HouseName;
   received: number;
   inserted: number;
-  nextRange?: string;
 }
 
-interface HistoricalPollOptions {
+interface HistoricalPollOptions extends DateRange {
   house: HouseName;
-  startDate: string; // Format: YYYY-MM-DD
-  endDate: string; // Format: YYYY-MM-DD
 }
 
 async function pollHistoricalByHouse(
   database: PollDatabase,
   options: HistoricalPollOptions,
-): Promise<PollResult> {
-  const currentRange = datesToRangeString(options.startDate, options.endDate);
-  const nextRange = getNextDateRangeFromRangeString(currentRange, "backward");
-
-  const pollValues = {
-    status: "running" as const,
-    house: options.house,
-    rangePolled: currentRange,
-    nextRange: nextRange,
-  }
-
-
+): Promise<HistoricalPollResult> {
   const [run] = await database
-    .insert(historicalRuns)
-    .values(pollValues)
-    .returning({ id: historicalRuns.id });
+    .insert(pollRuns)
+    .values({
+      runType: "historical",
+      status: POLL_STATUS.RUNNING,
+      house: options.house,
+      pollStart: options.startDate,
+      pollEnd: options.endDate,
+    })
+    .returning({ id: pollRuns.id });
 
-  if (!run) {
-    throw new Error("Failed to create poll run");
-  }
+  if (!run) throw new Error("Failed to create historical poll run");
 
   try {
     const historicalRates = await fetchHistory(
@@ -54,50 +51,60 @@ async function pollHistoricalByHouse(
       options.startDate,
       options.endDate,
     );
-    const inserted = await database.transaction((tx) =>
-      tx
-        .insert(rateObservations)
-        .values(
-          historicalRates.map((rate) => ({
-            pollRunId: run.id,
-            provider: PROVIDER_NAMES.AMBITO,
-            currency: rate.moneda,
-            casa: rate.casa,
-            name: rate.nombre,
-            sourceFingerprint: createObservationFingerprint(rate),
-            buy: rate.compra?.toString() ?? null,
-            sell: rate.venta?.toString() ?? null,
-            upstreamUpdatedAt: new Date(rate.fechaActualizacion),
-          })),
-        )
-        .onConflictDoNothing({
-          target: rateObservations.sourceFingerprint,
-        })
-        .returning({ id: rateObservations.id }),
-    );
 
-    await database
-      .update(historicalRuns)
-      .set({
-        status: "success",
-        completedAt: new Date(),
-        rowsReceived: historicalRates.length,
-        rowsInserted: inserted.length,
-      })
-      .where(eq(historicalRuns.id, run.id));
+    const insertedCount = await database.transaction(async (tx) => {
+      let inserted: { id: string }[] = [];
+      if (historicalRates.length > 0) {
+        inserted = await tx
+          .insert(rateObservations)
+          .values(
+            historicalRates.map((rate) => ({
+              pollRunId: run.id,
+              provider: PROVIDER_NAMES.AMBITO,
+              currency: rate.moneda,
+              casa: rate.casa,
+              name: rate.nombre,
+              sourceFingerprint: createObservationFingerprint(
+                PROVIDER_NAMES.AMBITO,
+                rate,
+              ),
+              buy: rate.compra?.toString() ?? null,
+              sell: rate.venta?.toString() ?? null,
+              upstreamUpdatedAt: new Date(rate.fechaActualizacion),
+            })),
+          )
+          .onConflictDoNothing({
+            target: rateObservations.sourceFingerprint,
+          })
+          .returning({ id: rateObservations.id });
+      }
+
+      await tx
+        .update(pollRuns)
+        .set({
+          status: POLL_STATUS.SUCCESS,
+          completedAt: new Date(),
+          rowsReceived: historicalRates.length,
+          rowsInserted: inserted.length,
+        })
+        .where(eq(pollRuns.id, run.id));
+
+      return inserted.length;
+    });
 
     return {
       runId: run.id,
+      house: options.house,
+      startDate: options.startDate,
+      endDate: options.endDate,
       received: historicalRates.length,
-      inserted: inserted.length,
-      nextRange: nextRange,
+      inserted: insertedCount,
     };
-
   } catch (error) {
     await database
-      .update(historicalRuns)
+      .update(pollRuns)
       .set({
-        status: "failed",
+        status: POLL_STATUS.FAILED,
         completedAt: new Date(),
         errorCode: error instanceof Error ? error.name : "UNKNOWN_ERROR",
         errorMessage:
@@ -105,48 +112,65 @@ async function pollHistoricalByHouse(
             ? error.message.slice(0, 1_000)
             : "Unknown polling error",
       })
-      .where(eq(historicalRuns.id, run.id));
+      .where(eq(pollRuns.id, run.id));
 
     throw error;
   }
 }
 
-export async function getLastPolledRangeByHouse(database: PollDatabase = db, house: HouseName): Promise<string | null> {
-  const lastRun = await database
-    .select()
-    .from(historicalRuns)
-    .where(eq(historicalRuns.house, house))
-    .orderBy(historicalRuns.completedAt, "desc")
+export async function getNextHistoricalRangeByHouse(
+  database: PollDatabase,
+  house: HouseName,
+  now: Date = new Date(),
+): Promise<DateRange | null> {
+  const [lastSuccessfulRun] = await database
+    .select({ pollStart: pollRuns.pollStart })
+    .from(pollRuns)
+    .where(
+      and(
+        eq(pollRuns.runType, "historical"),
+        eq(pollRuns.house, house),
+        eq(pollRuns.status, POLL_STATUS.SUCCESS),
+      ),
+    )
+    .orderBy(desc(pollRuns.completedAt), desc(pollRuns.startedAt))
     .limit(1);
-  return lastRun.length > 0 && lastRun[0] ? lastRun[0].nextRange : null;
+
+  return getHistoricalRange(lastSuccessfulRun?.pollStart ?? null, now);
 }
 
-export async function pollHistorical(database: PollDatabase = db): Promise<PollResult[]> {
-  const results: PollResult[] = [];
+export async function pollHistorical(
+  database: PollDatabase = db,
+): Promise<HistoricalPollResult[]> {
+  const results: HistoricalPollResult[] = [];
+  const failures: unknown[] = [];
 
   for (const house of Object.values(HOUSE_NAMES)) {
     try {
-      let lastRange = await getLastPolledRangeByHouse(database, house);
-      if (!lastRange) {
-        console.log(`No previous poll found for house ${house}. Skipping.`);
-        const today = new Date();
-        const startDate = today.setMonth(today.getMonth() - 1);
-        const endDate = today.setMonth(today.getMonth() - 2);
-
+      const range = await getNextHistoricalRangeByHouse(database, house);
+      if (!range) {
+        console.info(`Historical polling complete for house ${house}`);
+        continue;
       }
 
-      const { startDate, endDate } = rangeStringToDates(lastRange);
-
-      console.log(`Polling historical data for house ${house} from ${startDate} to ${endDate}...`);
-      const rates = await pollHistoricalByHouse(database, {
-        house,
-        startDate,
-        endDate,
-      });
-      results.push(rates);
+      console.info(
+        `Polling historical data for house ${house} from ${range.startDate} to ${range.endDate}`,
+      );
+      results.push(
+        await pollHistoricalByHouse(database, { house, ...range }),
+      );
     } catch (error) {
+      failures.push(error);
       console.error(`Failed to poll historical data for house ${house}:`, error);
     }
   }
+
+  if (failures.length > 0) {
+    throw new AggregateError(
+      failures,
+      `Historical polling failed for ${failures.length} house(s)`,
+    );
+  }
+
   return results;
 }

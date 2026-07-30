@@ -9,10 +9,9 @@ import {
 import {
   ambitoHistoricalResponseSchema,
   ambitoRequestDateSchema,
-  dolarApiResponseSchema,
+  dolarApiRateSchema,
   houseNameSchema,
-  type DolarApiResponse,
-  validateDateRange,
+  type DolarApiRate,
 } from "./validators";
 
 const buenosAiresDateTime = new Intl.DateTimeFormat("en-CA", {
@@ -61,60 +60,66 @@ function parseLocalizedNumber(value: string): number {
   return Number(value.replaceAll(".", "").replace(",", "."));
 }
 
-export function datesToRangeString(startDate: string, endDate: string): string {
-  if (!validateDateRange(startDate, endDate)) {
-    throw new Error(
-      `Invalid date range: ${startDate} to ${endDate}. Start date must be before or equal to end date.`,
-    );
-  }
-  return `${startDate} to ${endDate}`;
+export interface DateRange {
+  startDate: string;
+  endDate: string;
 }
-export function rangeStringToDates(range: string): { startDate: string; endDate: string } {
-  const [startDate, endDate] = range.split(" to ");
-  if (!startDate || !endDate) {
-    throw new Error(`Invalid range string: ${range}. Expected format: "YYYY-MM-DD to YYYY-MM-DD".`);
+
+function parseIsoDate(date: string): [year: number, month: number, day: number] {
+  const match = /^(\d{4})-(\d{2})-(\d{2})$/.exec(date);
+  if (!match) throw new Error(`Invalid ISO date: ${date}`);
+
+  const year = Number(match[1]);
+  const month = Number(match[2]);
+  const day = Number(match[3]);
+  const parsed = new Date(Date.UTC(year, month - 1, day));
+  if (
+    parsed.getUTCFullYear() !== year ||
+    parsed.getUTCMonth() !== month - 1 ||
+    parsed.getUTCDate() !== day
+  ) {
+    throw new Error(`Invalid ISO date: ${date}`);
   }
-  if (!validateDateRange(startDate, endDate)) {
-    throw new Error(
-      `Invalid date range: ${startDate} to ${endDate}. Start date must be before or equal to end date.`,
-    );
-  }
-  return { startDate, endDate };
+
+  return [year, month, day];
 }
-/**
- * 
- * @param currentStartDate 
- * @param currentEndDate 
- * @param direction "forward" add one month to the current range, "backward" subtract one month from the current range
- * @returns 
- */
-export type NextDateDirection = "forward" | "backward";
-export function getNextDateRange(currentStartDate: string, currentEndDate: string, direction: NextDateDirection = "forward"): { nextStartDate: string; nextEndDate: string } {
-  const startDate = new Date(currentStartDate);
-  const endDate = new Date(currentEndDate);
 
-  if (!validateDateRange(currentStartDate, currentEndDate)) {
-    throw new Error(
-      `Invalid date range: ${currentStartDate} to ${currentEndDate}. Start date must be before or equal to end date.`,
-    );
-  }
-
-  const monthOffset = direction === "forward" ? 1 : -1;
-  const nextStartDate = new Date(startDate);
-  nextStartDate.setMonth(nextStartDate.getMonth() + monthOffset);
-
-  const nextEndDate = new Date(endDate);
-  nextEndDate.setMonth(nextEndDate.getMonth() + monthOffset);
+function calendarMonthRange(year: number, month: number): DateRange {
+  const normalized = new Date(Date.UTC(year, month - 1, 1));
+  const normalizedYear = normalized.getUTCFullYear();
+  const normalizedMonth = normalized.getUTCMonth() + 1;
+  const lastDay = new Date(
+    Date.UTC(normalizedYear, normalizedMonth, 0),
+  ).getUTCDate();
+  const yearPart = String(normalizedYear).padStart(4, "0");
+  const monthPart = String(normalizedMonth).padStart(2, "0");
 
   return {
-    nextStartDate: nextStartDate.toISOString(),
-    nextEndDate: nextEndDate.toISOString(),
+    startDate: `${yearPart}-${monthPart}-01`,
+    endDate: `${yearPart}-${monthPart}-${String(lastDay).padStart(2, "0")}`,
   };
 }
-export function getNextDateRangeFromRangeString(currentRange: string, direction: NextDateDirection = "forward"): string {
-  const { startDate, endDate } = rangeStringToDates(currentRange);
-  const { nextStartDate, nextEndDate } = getNextDateRange(startDate, endDate, direction);
-  return datesToRangeString(nextStartDate, nextEndDate);
+
+export function getLastCompleteCalendarMonthRange(
+  now: Date = new Date(),
+): DateRange {
+  const parts = buenosAiresDateTime.formatToParts(now);
+  const valueOf = (type: Intl.DateTimeFormatPartTypes): number =>
+    Number(parts.find((part) => part.type === type)!.value);
+
+  return calendarMonthRange(valueOf("year"), valueOf("month") - 1);
+}
+
+export function getPreviousCalendarMonthRange(
+  currentStartDate: string,
+): DateRange {
+  const [year, month] = parseIsoDate(currentStartDate);
+  return calendarMonthRange(year, month - 1);
+}
+
+export function toAmbitoRequestDate(date: string): string {
+  const [year, month, day] = parseIsoDate(date);
+  return `${String(day).padStart(2, "0")}-${String(month).padStart(2, "0")}-${String(year).padStart(4, "0")}`;
 }
 
 export function getAmbitoDolarUrl(
@@ -124,10 +129,14 @@ export function getAmbitoDolarUrl(
 ): string {
   const parsedCasa = houseNameSchema.parse(casa);
   // Parsed dates should be on day/month/year format, as expected by Ambito's API.
-  const parsedStartDate = ambitoRequestDateSchema.parse(startDate);
-  const parsedEndDate = ambitoRequestDateSchema.parse(endDate);
+  const parsedStartDate = ambitoRequestDateSchema.parse(
+    toAmbitoRequestDate(startDate),
+  );
+  const parsedEndDate = ambitoRequestDateSchema.parse(
+    toAmbitoRequestDate(endDate),
+  );
 
-  if (!validateDateRange(parsedStartDate, parsedEndDate)) {
+  if (startDate > endDate) {
     throw new Error(
       `Invalid date range: ${parsedStartDate} to ${parsedEndDate}. Start date must be before or equal to end date.`,
     );
@@ -140,11 +149,11 @@ export function getAmbitoDolarUrl(
 export function formatAmbitoHistoricalDataToDolarApiFormat(
   ambitoData: unknown,
   casa: HouseName,
-): DolarApiResponse {
+): DolarApiRate[] {
   const [, ...rows] = ambitoHistoricalResponseSchema.parse(ambitoData);
   const parsedCasa = houseNameSchema.parse(casa);
 
-  return dolarApiResponseSchema.parse(
+  return dolarApiRateSchema.array().parse(
     rows.map(([fecha, compra, venta]) => ({
       moneda: CURRENCY_NAMES.USD,
       casa: parsedCasa,

@@ -86,8 +86,7 @@ const ambitoHistoricalRateRowSchema = z.tuple([
 
 export const ambitoHistoricalResponseSchema = z
   .tuple([ambitoHistoricalHeaderSchema])
-  .rest(ambitoHistoricalRateRowSchema)
-  .refine((response) => response.length > 1, "Expected at least one rate row");
+  .rest(ambitoHistoricalRateRowSchema);
 
 export type AmbitoHistoricalResponse = z.infer<
   typeof ambitoHistoricalResponseSchema

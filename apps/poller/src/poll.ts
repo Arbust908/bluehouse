@@ -6,6 +6,7 @@ import {
 import { db } from "./db";
 import { fetchRates } from "./fetch-rates";
 import { createObservationFingerprint } from "./fingerprint";
+import { POLL_STATUS, PROVIDER_NAMES } from "@bluehouse/shared/constants";
 
 type PollDatabase = Pick<typeof db, "insert" | "transaction" | "update">;
 
@@ -18,7 +19,7 @@ export interface PollResult {
 export async function pollRates(database: PollDatabase = db): Promise<PollResult> {
   const [run] = await database
     .insert(pollRuns)
-    .values({ status: "running" })
+    .values({ status: POLL_STATUS.RUNNING })
     .returning({ id: pollRuns.id });
 
   if (!run) {
@@ -33,11 +34,14 @@ export async function pollRates(database: PollDatabase = db): Promise<PollResult
         .values(
           rates.map((rate) => ({
             pollRunId: run.id,
-            provider: "dolarapi" as const,
+            provider: PROVIDER_NAMES.DOLAR_API,
             currency: rate.moneda,
             casa: rate.casa,
             name: rate.nombre,
-            sourceFingerprint: createObservationFingerprint(rate),
+            sourceFingerprint: createObservationFingerprint(
+              PROVIDER_NAMES.DOLAR_API,
+              rate,
+            ),
             buy: rate.compra?.toString() ?? null,
             sell: rate.venta?.toString() ?? null,
             upstreamUpdatedAt: new Date(rate.fechaActualizacion),
@@ -52,7 +56,7 @@ export async function pollRates(database: PollDatabase = db): Promise<PollResult
     await database
       .update(pollRuns)
       .set({
-        status: "success",
+        status: POLL_STATUS.SUCCESS,
         completedAt: new Date(),
         rowsReceived: rates.length,
         rowsInserted: inserted.length,
@@ -68,7 +72,7 @@ export async function pollRates(database: PollDatabase = db): Promise<PollResult
     await database
       .update(pollRuns)
       .set({
-        status: "failed",
+        status: POLL_STATUS.FAILED,
         completedAt: new Date(),
         errorCode: error instanceof Error ? error.name : "UNKNOWN_ERROR",
         errorMessage:

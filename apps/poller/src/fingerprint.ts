@@ -1,10 +1,14 @@
 import type { DolarApiRate } from "@bluehouse/shared/validators";
+import type { ProviderName } from "@bluehouse/shared/constants";
 
-export function createObservationFingerprint(rate: DolarApiRate): string {
+export function createObservationFingerprint(
+  provider: ProviderName,
+  rate: DolarApiRate,
+): string {
   return new Bun.CryptoHasher("sha256")
     .update(
       JSON.stringify([
-        "dolarapi",
+        provider,
         rate.moneda,
         rate.casa,
         rate.fechaActualizacion,

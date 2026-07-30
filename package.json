@@ -8,6 +8,7 @@
   ],
   "scripts": {
     "poll": "bun apps/poller/src/index.ts",
+    "historical": "bun apps/poller/src/historical.ts",
     "db:generate": "drizzle-kit generate",
     "db:migrate": "bun drizzle/migrate.ts",
     "test": "bun test",

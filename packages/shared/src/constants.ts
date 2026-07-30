@@ -36,6 +36,14 @@ export const PROVIDER_NAMES = {
 export type ProviderName =
   (typeof PROVIDER_NAMES)[keyof typeof PROVIDER_NAMES];
 
+export const RUN_TYPE = {
+  LIVE: "live",
+  HISTORICAL: "historical",
+} as const;
+
+export type RunType = (typeof RUN_TYPE)[keyof typeof RUN_TYPE];
+
+
 export const DOLAR_API_URL = "https://dolarapi.com/v1/dolares";
 export const AMBITO_DOLAR_BASE_URL = "https://mercados.ambito.com/dolar";
 export const AMBITO_TIME_ZONE = "America/Argentina/Buenos_Aires";

@@ -1,6 +1,8 @@
 import { sql } from "drizzle-orm/sql/sql";
 import {
   bigint,
+  check,
+  date,
   index,
   numeric,
   pgEnum,
@@ -10,81 +12,59 @@ import {
   uniqueIndex,
   uuid,
 } from "drizzle-orm/pg-core";
-import { CURRENCY_NAMES, HOUSE_NAMES } from "../constants";
+import { CURRENCY_NAMES, HOUSE_NAMES, POLL_STATUS, PROVIDER_NAMES, RUN_TYPE } from "../constants";
 
 export const casaEnum = pgEnum("casa", HOUSE_NAMES);
-
 export const currencyEnum = pgEnum("currency", CURRENCY_NAMES);
+export const providerEnum = pgEnum("provider", PROVIDER_NAMES);
+export const pollStatusEnum = pgEnum("poll_status", POLL_STATUS);
+export const pollRunTypeEnum = pgEnum("poll_run_type", RUN_TYPE);
 
-export const providerEnum = pgEnum("provider", [
-  "dolarapi",
-  "ambito",
-]);
 
-export const pollStatusEnum = pgEnum("poll_status", [
-  "running",
-  "success",
-  "failed",
-  "skipped",
-]);
-export type PollStatus = (typeof pollStatusEnum.enumValues)[number];
-
-// Individual poll runs
-export const pollRuns = pgTable("poll_runs", {
-  id: uuid("id").primaryKey().default(sql`uuidv7()`),
-  status: pollStatusEnum("status").notNull(),
-  startedAt: timestamp("started_at", {
-    mode: "date",
-    withTimezone: true,
-  })
-    .notNull()
-    .defaultNow(),
-  completedAt: timestamp("completed_at", {
-    mode: "date",
-    withTimezone: true,
-  }),
-  upstreamStatus: bigint("upstream_status", {
-    mode: "number",
-  }),
-  rowsReceived: bigint("rows_received", {
-    mode: "number",
-  }),
-  rowsInserted: bigint("rows_inserted", {
-    mode: "number",
-  }),
-  errorCode: text("error_code"),
-  errorMessage: text("error_message"),
-})
-// Bulk historical runs
-export const historicalRuns = pgTable("historical_runs", {
-  id: uuid("id").primaryKey().default(sql`uuidv7()`),
-  status: pollStatusEnum("status").notNull(),
-  house: casaEnum("house").notNull(),
-  rangePolled: text("range_polled").notNull(),
-  nextRange: text("next_range").notNull(),
-
-  startedAt: timestamp("started_at", {
-    mode: "date",
-    withTimezone: true,
-  })
-    .notNull()
-    .defaultNow(),
-  completedAt: timestamp("completed_at", {
-    mode: "date",
-    withTimezone: true,
-  }),
-  upstreamStatus: bigint("upstream_status", {
-    mode: "number",
-  }),
-  rowsReceived: bigint("rows_received", {
-    mode: "number",
-  }),
-  rowsInserted: bigint("rows_inserted", {
-    mode: "number",
-  }),
-  errorCode: text("error_code"),
-  errorMessage: text("error_message"),
-});
+export const pollRuns = pgTable(
+  "poll_runs",
+  {
+    id: uuid("id").primaryKey().default(sql`uuidv7()`),
+    runType: pollRunTypeEnum("run_type").notNull().default("live"),
+    status: pollStatusEnum("status").notNull(),
+    house: casaEnum("house"),
+    pollStart: date("poll_start", { mode: "string" }),
+    pollEnd: date("poll_end", { mode: "string" }),
+    startedAt: timestamp("started_at", {
+      mode: "date",
+      withTimezone: true,
+    })
+      .notNull()
+      .defaultNow(),
+    completedAt: timestamp("completed_at", {
+      mode: "date",
+      withTimezone: true,
+    }),
+    upstreamStatus: bigint("upstream_status", {
+      mode: "number",
+    }),
+    rowsReceived: bigint("rows_received", {
+      mode: "number",
+    }),
+    rowsInserted: bigint("rows_inserted", {
+      mode: "number",
+    }),
+    errorCode: text("error_code"),
+    errorMessage: text("error_message"),
+  },
+  (table) => [
+    check(
+      "poll_runs_type_fields_check",
+      sql`(${table.runType} = 'live' AND ${table.house} IS NULL AND ${table.pollStart} IS NULL AND ${table.pollEnd} IS NULL) OR (${table.runType} = 'historical' AND ${table.house} IS NOT NULL AND ${table.pollStart} IS NOT NULL AND ${table.pollEnd} IS NOT NULL AND ${table.pollStart} <= ${table.pollEnd})`,
+    ),
+    index("poll_runs_historical_checkpoint_idx").on(
+      table.runType,
+      table.house,
+      table.status,
+      table.completedAt,
+    ),
+  ],
+);
 
 
 export const rateObservations = pgTable(
@@ -139,9 +119,6 @@ export const rateObservations = pgTable(
 
 export type PollRun = typeof pollRuns.$inferSelect;
 export type NewPollRun = typeof pollRuns.$inferInsert;
-
-export type HistoricalRun = typeof historicalRuns.$inferSelect;
-export type NewHistoricalRun = typeof historicalRuns.$inferInsert;
 
 export type RateObservation = typeof rateObservations.$inferSelect;
 export type NewRateObservation = typeof rateObservations.$inferInsert;

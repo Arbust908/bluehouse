@@ -7,6 +7,9 @@ import {
 import {
   formatAmbitoHistoricalDataToDolarApiFormat,
   getAmbitoDolarUrl,
+  getLastCompleteCalendarMonthRange,
+  getPreviousCalendarMonthRange,
+  toAmbitoRequestDate,
 } from "@bluehouse/shared/format";
 import {
   ambitoHistoricalResponseSchema,
@@ -108,7 +111,6 @@ describe("Ámbito historical response formatting", () => {
     ["dot decimal", payloadWithRow(1, ["12/06/2026", "1401.62", "1452,55"])],
     ["malformed grouping", payloadWithRow(1, ["12/06/2026", "1.40,20", "1452,55"])],
     ["non-numeric price", payloadWithRow(1, ["12/06/2026", "N/A", "1452,55"])],
-    ["header-only response", [["Fecha", "Compra", "Venta"]]],
   ])("rejects a %s", (_description, payload) => {
     expect(() =>
       formatAmbitoHistoricalDataToDolarApiFormat(payload, HOUSE_NAMES.BLUE),
@@ -117,8 +119,17 @@ describe("Ámbito historical response formatting", () => {
 
   test("rejects an unsupported house", () => {
     expect(() =>
-      formatAmbitoHistoricalDataToDolarApiFormat(fixture, "informal"),
+      formatAmbitoHistoricalDataToDolarApiFormat(fixture, "informal" as never),
     ).toThrow();
+  });
+
+  test("accepts a header-only response as an empty historical result", () => {
+    expect(
+      formatAmbitoHistoricalDataToDolarApiFormat(
+        [["Fecha", "Compra", "Venta"]],
+        HOUSE_NAMES.BLUE,
+      ),
+    ).toEqual([]);
   });
 });
 
@@ -132,17 +143,51 @@ describe("Ámbito historical URLs", () => {
     [HOUSE_NAMES.CRIPTO, "cripto"],
     [HOUSE_NAMES.TARJETA, "turista"],
   ] as const)("maps %s to the %s series", (house, series) => {
-    expect(getAmbitoDolarUrl(house, "01-06-2026", "12-06-2026")).toBe(
+    expect(getAmbitoDolarUrl(house, "2026-06-01", "2026-06-12")).toBe(
       `${AMBITO_DOLAR_BASE_URL}/${series}/historico-general/01-06-2026/12-06-2026`,
     );
   });
 
   test.each([
-    ["unknown", "01-06-2026", "12-06-2026"],
-    [HOUSE_NAMES.BLUE, "2026-06-01", "12-06-2026"],
-    [HOUSE_NAMES.BLUE, "31-02-2026", "12-06-2026"],
-    [HOUSE_NAMES.BLUE, "12-06-2026", "01-06-2026"],
+    ["unknown", "2026-06-01", "2026-06-12"],
+    [HOUSE_NAMES.BLUE, "01-06-2026", "2026-06-12"],
+    [HOUSE_NAMES.BLUE, "2026-02-31", "2026-06-12"],
+    [HOUSE_NAMES.BLUE, "2026-06-12", "2026-06-01"],
   ])("rejects invalid URL input %#", (house, startDate, endDate) => {
-    expect(() => getAmbitoDolarUrl(house, startDate, endDate)).toThrow();
+    expect(() =>
+      getAmbitoDolarUrl(house as never, startDate, endDate),
+    ).toThrow();
+  });
+});
+
+describe("historical date windows", () => {
+  test("uses the last month completed in Buenos Aires", () => {
+    expect(
+      getLastCompleteCalendarMonthRange(new Date("2026-07-01T01:00:00Z")),
+    ).toEqual({ startDate: "2026-05-01", endDate: "2026-05-31" });
+    expect(
+      getLastCompleteCalendarMonthRange(new Date("2026-07-01T04:00:00Z")),
+    ).toEqual({ startDate: "2026-06-01", endDate: "2026-06-30" });
+  });
+
+  test("moves backward by complete calendar months", () => {
+    expect(getPreviousCalendarMonthRange("2026-03-01")).toEqual({
+      startDate: "2026-02-01",
+      endDate: "2026-02-28",
+    });
+    expect(getPreviousCalendarMonthRange("2024-03-31")).toEqual({
+      startDate: "2024-02-01",
+      endDate: "2024-02-29",
+    });
+    expect(getPreviousCalendarMonthRange("2026-01-01")).toEqual({
+      startDate: "2025-12-01",
+      endDate: "2025-12-31",
+    });
+  });
+
+  test("formats ISO dates only at the Ámbito request boundary", () => {
+    expect(toAmbitoRequestDate("2002-01-11")).toBe("11-01-2002");
+    expect(() => toAmbitoRequestDate("11-01-2002")).toThrow();
+    expect(() => toAmbitoRequestDate("2026-02-31")).toThrow();
   });
 });
