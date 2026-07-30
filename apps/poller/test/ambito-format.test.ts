@@ -171,16 +171,20 @@ describe("Ámbito historical response formatting", () => {
 
 describe("Ámbito historical URLs", () => {
   test.each([
-    [HOUSE_NAMES.OFICIAL, "dolar/oficial"],
-    [HOUSE_NAMES.BLUE, "dolar/informal"],
-    [HOUSE_NAMES.BOLSA, "dolarrava/mep"],
-    [HOUSE_NAMES.CONTADO_CON_LIQUI, "dolarrava/cl"],
-    [HOUSE_NAMES.MAYORISTA, "dolar/mayorista"],
-    [HOUSE_NAMES.CRIPTO, "dolarcripto"],
-    [HOUSE_NAMES.TARJETA, "dolarturista"],
-  ] as const)("maps %s to the %s route", (house, route) => {
+    [HOUSE_NAMES.OFICIAL, "dolar/oficial", "01-06-2026/12-06-2026"],
+    [HOUSE_NAMES.BLUE, "dolar/informal", "01-06-2026/12-06-2026"],
+    [HOUSE_NAMES.BOLSA, "dolarrava/mep", "12-06-2026/01-06-2026"],
+    [
+      HOUSE_NAMES.CONTADO_CON_LIQUI,
+      "dolarrava/cl",
+      "12-06-2026/01-06-2026",
+    ],
+    [HOUSE_NAMES.MAYORISTA, "dolar/mayorista", "01-06-2026/12-06-2026"],
+    [HOUSE_NAMES.CRIPTO, "dolarcripto", "01-06-2026/12-06-2026"],
+    [HOUSE_NAMES.TARJETA, "dolarturista", "01-06-2026/12-06-2026"],
+  ] as const)("maps %s to the %s route", (house, route, dates) => {
     expect(getAmbitoDolarUrl(house, "2026-06-01", "2026-06-12")).toBe(
-      `${AMBITO_BASE_URL}/${route}/historico-general/2026-06-01/2026-06-12`,
+      `${AMBITO_BASE_URL}/${route}/historico-general/${dates}`,
     );
   });
 
@@ -224,7 +228,7 @@ describe("historical date windows", () => {
   test("uses and validates ISO dates at the Ámbito request boundary", () => {
     expect(
       getAmbitoDolarUrl(HOUSE_NAMES.BLUE, "2002-01-11", "2002-01-12"),
-    ).toEndWith("/2002-01-11/2002-01-12");
+    ).toEndWith("/11-01-2002/12-01-2002");
     expect(() =>
       getAmbitoDolarUrl(HOUSE_NAMES.BLUE, "11-01-2002", "2002-01-12"),
     ).toThrow();

@@ -84,6 +84,11 @@ function parseIsoDate(date: string): [year: number, month: number, day: number] 
   return [year, month, day];
 }
 
+function toAmbitoDate(date: string): string {
+  const [year, month, day] = parseIsoDate(date);
+  return `${String(day).padStart(2, "0")}-${String(month).padStart(2, "0")}-${year}`;
+}
+
 function calendarMonthRange(year: number, month: number): DateRange {
   const normalized = new Date(Date.UTC(year, month - 1, 1));
   const normalizedYear = normalized.getUTCFullYear();
@@ -123,8 +128,8 @@ export function getAmbitoDolarUrl(
   endDate: string,
 ): string {
   const parsedCasa = houseNameSchema.parse(casa);
-  parseIsoDate(startDate);
-  parseIsoDate(endDate);
+  const ambitoStartDate = toAmbitoDate(startDate);
+  const ambitoEndDate = toAmbitoDate(endDate);
 
   if (startDate > endDate) {
     throw new Error(
@@ -133,7 +138,12 @@ export function getAmbitoDolarUrl(
   }
 
   const route = AMBITO_ROUTE_BY_HOUSE[parsedCasa];
-  return `${AMBITO_BASE_URL}/${route}/historico-general/${startDate}/${endDate}`;
+  const dates =
+    parsedCasa === HOUSE_NAMES.BOLSA ||
+    parsedCasa === HOUSE_NAMES.CONTADO_CON_LIQUI
+      ? `${ambitoEndDate}/${ambitoStartDate}`
+      : `${ambitoStartDate}/${ambitoEndDate}`;
+  return `${AMBITO_BASE_URL}/${route}/historico-general/${dates}`;
 }
 
 export function formatAmbitoHistoricalDataToDolarApiFormat(

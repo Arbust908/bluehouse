@@ -31,7 +31,7 @@ describe("historical upstream errors", () => {
     );
 
     await expect(request).rejects.toThrow(
-      /GET https:\/\/.*\/dolarrava\/mep\/historico-general\/2025-08-01\/2025-08-31 returned HTTP 400 Bad Request; content-type=application\/json; body="\{\\"message\\":\\"invalid date range\\"\}"/,
+      /GET https:\/\/.*\/dolarrava\/mep\/historico-general\/31-08-2025\/01-08-2025 returned HTTP 400 Bad Request; content-type=application\/json; body="\{\\"message\\":\\"invalid date range\\"\}"/,
     );
   });
 
