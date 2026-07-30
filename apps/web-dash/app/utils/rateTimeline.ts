@@ -1,14 +1,14 @@
-import type { CasaTypes } from '@bluehouse/shared/db/schema';
+import type { HouseName } from '@bluehouse/shared/domain';
 
 export interface TimelineRateObservation {
-  casa: CasaTypes;
+  casa: HouseName;
   buy: string | null;
   sell: string | null;
   observedAt: Date | string;
 }
 
 export function buildRateTimeline(observations: readonly TimelineRateObservation[]) {
-  const changesByTimestamp = new Map<number, Map<CasaTypes, number>>()
+  const changesByTimestamp = new Map<number, Map<HouseName, number>>()
 
   for (const rate of observations) {
     if (rate.buy === null || rate.sell === null) continue
@@ -18,12 +18,12 @@ export function buildRateTimeline(observations: readonly TimelineRateObservation
     const timestamp = new Date(rate.observedAt).getTime()
     if (!Number.isFinite(buy) || !Number.isFinite(sell) || !Number.isFinite(timestamp)) continue
 
-    const changes = changesByTimestamp.get(timestamp) ?? new Map<CasaTypes, number>()
+    const changes = changesByTimestamp.get(timestamp) ?? new Map<HouseName, number>()
     changes.set(rate.casa, (buy + sell) / 2)
     changesByTimestamp.set(timestamp, changes)
   }
 
-  const latestRates = new Map<CasaTypes, number>()
+  const latestRates = new Map<HouseName, number>()
   return [...changesByTimestamp.entries()]
     .sort(([a], [b]) => a - b)
     .map(([timestamp, changes]) => {

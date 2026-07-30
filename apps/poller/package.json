@@ -3,7 +3,8 @@
   "private": true,
   "type": "module",
   "scripts": {
-    "poll": "bun src/index.ts"
+    "poll": "bun src/index.ts",
+    "historical": "bun src/historical.ts"
   },
   "dependencies": {
     "@bluehouse/shared": "workspace:*",

@@ -12,7 +12,9 @@ export default defineEventHandler(async (event) => {
 
   return {
     pollRuns: pollRunsData,
+    runCounts: pollRunsData.length,
     rateObservations: rateObservationsData,
+    observationCounts: rateObservationsData.length,
     queryTime: endTime - startTime,
   }
 })

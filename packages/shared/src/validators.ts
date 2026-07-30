@@ -1,10 +1,10 @@
 import * as z from "zod";
-import { CURRENCY_NAME_ARRAY, HOUSE_NAMES_ARRAY } from "./constants";
+import { CURRENCY_NAMES, HOUSE_NAMES } from "./constants";
 
-export const houseNameSchema = z.enum(HOUSE_NAMES_ARRAY);
+export const houseNameSchema = z.enum(HOUSE_NAMES);
 
 export const dolarApiRateSchema = z.strictObject({
-  moneda: z.enum(CURRENCY_NAME_ARRAY),
+  moneda: z.literal(CURRENCY_NAMES.USD),
   casa: houseNameSchema,
   nombre: z.string().min(1),
   compra: z.number().nonnegative().nullable(),
@@ -39,6 +39,9 @@ export function validateValidDateFormat(date: string): boolean {
   return /^\d{2}-\d{2}-\d{4}$/.test(date) && isRealDate(date, "-");
 }
 
+/**
+ * This should be used to validate dates that are sent to Ambito's API. Ambito expects dates in the format "dd-mm-yyyy", and this schema ensures that the date is in that format and represents a real calendar date.
+ */
 export const ambitoRequestDateSchema = z
   .string()
   .regex(/^\d{2}-\d{2}-\d{4}$/)

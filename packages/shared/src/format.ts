@@ -2,8 +2,9 @@ import {
   AMBITO_DOLAR_BASE_URL,
   AMBITO_SERIES_BY_HOUSE,
   AMBITO_TIME_ZONE,
-  CURRENCY_NAME,
+  CURRENCY_NAMES,
   HOUSE_DISPLAY_NAMES,
+  type HouseName,
 } from "./constants";
 import {
   ambitoHistoricalResponseSchema,
@@ -60,12 +61,69 @@ function parseLocalizedNumber(value: string): number {
   return Number(value.replaceAll(".", "").replace(",", "."));
 }
 
+export function datesToRangeString(startDate: string, endDate: string): string {
+  if (!validateDateRange(startDate, endDate)) {
+    throw new Error(
+      `Invalid date range: ${startDate} to ${endDate}. Start date must be before or equal to end date.`,
+    );
+  }
+  return `${startDate} to ${endDate}`;
+}
+export function rangeStringToDates(range: string): { startDate: string; endDate: string } {
+  const [startDate, endDate] = range.split(" to ");
+  if (!startDate || !endDate) {
+    throw new Error(`Invalid range string: ${range}. Expected format: "YYYY-MM-DD to YYYY-MM-DD".`);
+  }
+  if (!validateDateRange(startDate, endDate)) {
+    throw new Error(
+      `Invalid date range: ${startDate} to ${endDate}. Start date must be before or equal to end date.`,
+    );
+  }
+  return { startDate, endDate };
+}
+/**
+ * 
+ * @param currentStartDate 
+ * @param currentEndDate 
+ * @param direction "forward" add one month to the current range, "backward" subtract one month from the current range
+ * @returns 
+ */
+export type NextDateDirection = "forward" | "backward";
+export function getNextDateRange(currentStartDate: string, currentEndDate: string, direction: NextDateDirection = "forward"): { nextStartDate: string; nextEndDate: string } {
+  const startDate = new Date(currentStartDate);
+  const endDate = new Date(currentEndDate);
+
+  if (!validateDateRange(currentStartDate, currentEndDate)) {
+    throw new Error(
+      `Invalid date range: ${currentStartDate} to ${currentEndDate}. Start date must be before or equal to end date.`,
+    );
+  }
+
+  const monthOffset = direction === "forward" ? 1 : -1;
+  const nextStartDate = new Date(startDate);
+  nextStartDate.setMonth(nextStartDate.getMonth() + monthOffset);
+
+  const nextEndDate = new Date(endDate);
+  nextEndDate.setMonth(nextEndDate.getMonth() + monthOffset);
+
+  return {
+    nextStartDate: nextStartDate.toISOString(),
+    nextEndDate: nextEndDate.toISOString(),
+  };
+}
+export function getNextDateRangeFromRangeString(currentRange: string, direction: NextDateDirection = "forward"): string {
+  const { startDate, endDate } = rangeStringToDates(currentRange);
+  const { nextStartDate, nextEndDate } = getNextDateRange(startDate, endDate, direction);
+  return datesToRangeString(nextStartDate, nextEndDate);
+}
+
 export function getAmbitoDolarUrl(
-  casa: unknown,
-  startDate: unknown,
-  endDate: unknown,
+  casa: HouseName,
+  startDate: string,
+  endDate: string,
 ): string {
   const parsedCasa = houseNameSchema.parse(casa);
+  // Parsed dates should be on day/month/year format, as expected by Ambito's API.
   const parsedStartDate = ambitoRequestDateSchema.parse(startDate);
   const parsedEndDate = ambitoRequestDateSchema.parse(endDate);
 
@@ -81,14 +139,14 @@ export function getAmbitoDolarUrl(
 
 export function formatAmbitoHistoricalDataToDolarApiFormat(
   ambitoData: unknown,
-  casa: unknown,
+  casa: HouseName,
 ): DolarApiResponse {
   const [, ...rows] = ambitoHistoricalResponseSchema.parse(ambitoData);
   const parsedCasa = houseNameSchema.parse(casa);
 
   return dolarApiResponseSchema.parse(
     rows.map(([fecha, compra, venta]) => ({
-      moneda: CURRENCY_NAME.USD,
+      moneda: CURRENCY_NAMES.USD,
       casa: parsedCasa,
       nombre: HOUSE_DISPLAY_NAMES[parsedCasa],
       compra: parseLocalizedNumber(compra),

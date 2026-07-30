@@ -13,13 +13,14 @@
 </template>
 
 <script setup lang="ts">
-import type { CasaTypes, RateObservation } from '@bluehouse/shared/db/schema';
+import type { HouseName } from '@bluehouse/shared/domain';
+import type { RateObservation } from '@bluehouse/shared/db/schema';
 
 interface Props {
   rates: RateObservation[];
 }
 interface RateCard {
-  casa: CasaTypes;
+  casa: HouseName;
   title: string;
   value: string;
   buy: string;
@@ -37,7 +38,7 @@ const currencyFormatter = new Intl.NumberFormat('es-AR', {
 })
 
 const rateCards = computed(() => {
-  const latestByCasa = new Map<CasaTypes, RateObservation>()
+  const latestByCasa = new Map<HouseName, RateObservation>()
 
   for (const rate of props.rates) {
     const current = latestByCasa.get(rate.casa)
@@ -65,7 +66,7 @@ const rateCards = computed(() => {
     })
   }
 
-  const order: CasaTypes[] = ['oficial', 'blue', 'bolsa', 'contadoconliqui', 'mayorista', 'cripto', 'tarjeta']
+  const order: HouseName[] = ['oficial', 'blue', 'bolsa', 'contadoconliqui', 'mayorista', 'cripto', 'tarjeta']
   return cards.sort((a, b) => order.indexOf(a.casa) - order.indexOf(b.casa))
 })
 
