@@ -11,6 +11,7 @@ RUN bun install --frozen-lockfile --production
 FROM oven/bun:1-slim
 WORKDIR /repo
 COPY --from=deps /repo/node_modules node_modules
+COPY --from=deps /repo/apps/poller/node_modules apps/poller/node_modules
 COPY package.json bun.lock ./
 COPY apps/poller apps/poller
 COPY packages/shared packages/shared
