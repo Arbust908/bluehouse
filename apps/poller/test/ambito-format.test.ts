@@ -1,6 +1,6 @@
 import { describe, expect, test } from "bun:test";
 import {
-  AMBITO_DOLAR_BASE_URL,
+  AMBITO_BASE_URL,
   HOUSE_DISPLAY_NAMES,
   HOUSE_NAMES,
 } from "@bluehouse/shared/constants";
@@ -9,7 +9,6 @@ import {
   getAmbitoDolarUrl,
   getLastCompleteCalendarMonthRange,
   getPreviousCalendarMonthRange,
-  toAmbitoRequestDate,
 } from "@bluehouse/shared/format";
 import {
   ambitoHistoricalResponseSchema,
@@ -97,9 +96,11 @@ describe("Ámbito historical response formatting", () => {
   });
 
   test.each([
-    ["wrong header order", payloadWithRow(0, ["Fecha", "Venta", "Compra"])],
     ["missing header field", payloadWithRow(0, ["Fecha", "Compra"])],
-    ["extra header field", payloadWithRow(0, ["Fecha", "Compra", "Venta", "Otro"])],
+    [
+      "extra header field",
+      payloadWithRow(0, ["Fecha", "Compra", "Venta", "Otro"]),
+    ],
     ["missing row field", payloadWithRow(1, ["12/06/2026", "1401,62"])],
     [
       "extra row field",
@@ -131,20 +132,55 @@ describe("Ámbito historical response formatting", () => {
       ),
     ).toEqual([]);
   });
+
+  test.each([
+    [HOUSE_NAMES.BOLSA, "Referencia"],
+    [HOUSE_NAMES.CONTADO_CON_LIQUI, "Referencia"],
+    [HOUSE_NAMES.TARJETA, "Venta"],
+  ] as const)("normalizes the single-value %s series as sell", (house, label) => {
+    const result = formatAmbitoHistoricalDataToDolarApiFormat(
+      [["Fecha", label], ["03/07/2026", "1.524,53"]],
+      house,
+    );
+
+    expect(result[0]).toMatchObject({
+      casa: house,
+      compra: null,
+      venta: 1524.53,
+    });
+  });
+
+  test("does not depend on exact header wording", () => {
+    expect(
+      formatAmbitoHistoricalDataToDolarApiFormat(
+        [["date", "buy", "sell"], ["03/07/2026", "1.500,00", "1.510,00"]],
+        HOUSE_NAMES.BLUE,
+      ),
+    ).toHaveLength(1);
+  });
+
+  test("rejects a response shape that does not match the house", () => {
+    expect(() =>
+      formatAmbitoHistoricalDataToDolarApiFormat(
+        [["Fecha", "Referencia"], ["03/07/2026", "1.524,53"]],
+        HOUSE_NAMES.BLUE,
+      ),
+    ).toThrow();
+  });
 });
 
 describe("Ámbito historical URLs", () => {
   test.each([
-    [HOUSE_NAMES.OFICIAL, "oficial"],
-    [HOUSE_NAMES.BLUE, "informal"],
-    [HOUSE_NAMES.BOLSA, "mep"],
-    [HOUSE_NAMES.CONTADO_CON_LIQUI, "contadoconliqui"],
-    [HOUSE_NAMES.MAYORISTA, "mayorista"],
-    [HOUSE_NAMES.CRIPTO, "cripto"],
-    [HOUSE_NAMES.TARJETA, "turista"],
-  ] as const)("maps %s to the %s series", (house, series) => {
+    [HOUSE_NAMES.OFICIAL, "dolar/oficial"],
+    [HOUSE_NAMES.BLUE, "dolar/informal"],
+    [HOUSE_NAMES.BOLSA, "dolarrava/mep"],
+    [HOUSE_NAMES.CONTADO_CON_LIQUI, "dolarrava/cl"],
+    [HOUSE_NAMES.MAYORISTA, "dolar/mayorista"],
+    [HOUSE_NAMES.CRIPTO, "dolarcripto"],
+    [HOUSE_NAMES.TARJETA, "dolarturista"],
+  ] as const)("maps %s to the %s route", (house, route) => {
     expect(getAmbitoDolarUrl(house, "2026-06-01", "2026-06-12")).toBe(
-      `${AMBITO_DOLAR_BASE_URL}/${series}/historico-general/01-06-2026/12-06-2026`,
+      `${AMBITO_BASE_URL}/${route}/historico-general/2026-06-01/2026-06-12`,
     );
   });
 
@@ -185,9 +221,15 @@ describe("historical date windows", () => {
     });
   });
 
-  test("formats ISO dates only at the Ámbito request boundary", () => {
-    expect(toAmbitoRequestDate("2002-01-11")).toBe("11-01-2002");
-    expect(() => toAmbitoRequestDate("11-01-2002")).toThrow();
-    expect(() => toAmbitoRequestDate("2026-02-31")).toThrow();
+  test("uses and validates ISO dates at the Ámbito request boundary", () => {
+    expect(
+      getAmbitoDolarUrl(HOUSE_NAMES.BLUE, "2002-01-11", "2002-01-12"),
+    ).toEndWith("/2002-01-11/2002-01-12");
+    expect(() =>
+      getAmbitoDolarUrl(HOUSE_NAMES.BLUE, "11-01-2002", "2002-01-12"),
+    ).toThrow();
+    expect(() =>
+      getAmbitoDolarUrl(HOUSE_NAMES.BLUE, "2026-02-31", "2026-03-01"),
+    ).toThrow();
   });
 });

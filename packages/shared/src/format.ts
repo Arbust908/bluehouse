@@ -1,14 +1,14 @@
 import {
-  AMBITO_DOLAR_BASE_URL,
-  AMBITO_SERIES_BY_HOUSE,
+  AMBITO_BASE_URL,
+  AMBITO_ROUTE_BY_HOUSE,
   AMBITO_TIME_ZONE,
   CURRENCY_NAMES,
   HOUSE_DISPLAY_NAMES,
+  HOUSE_NAMES,
   type HouseName,
 } from "./constants";
 import {
   ambitoHistoricalResponseSchema,
-  ambitoRequestDateSchema,
   dolarApiRateSchema,
   houseNameSchema,
   type DolarApiRate,
@@ -117,50 +117,51 @@ export function getPreviousCalendarMonthRange(
   return calendarMonthRange(year, month - 1);
 }
 
-export function toAmbitoRequestDate(date: string): string {
-  const [year, month, day] = parseIsoDate(date);
-  return `${String(day).padStart(2, "0")}-${String(month).padStart(2, "0")}-${String(year).padStart(4, "0")}`;
-}
-
 export function getAmbitoDolarUrl(
   casa: HouseName,
   startDate: string,
   endDate: string,
 ): string {
   const parsedCasa = houseNameSchema.parse(casa);
-  // Parsed dates should be on day/month/year format, as expected by Ambito's API.
-  const parsedStartDate = ambitoRequestDateSchema.parse(
-    toAmbitoRequestDate(startDate),
-  );
-  const parsedEndDate = ambitoRequestDateSchema.parse(
-    toAmbitoRequestDate(endDate),
-  );
+  parseIsoDate(startDate);
+  parseIsoDate(endDate);
 
   if (startDate > endDate) {
     throw new Error(
-      `Invalid date range: ${parsedStartDate} to ${parsedEndDate}. Start date must be before or equal to end date.`,
+      `Invalid date range: ${startDate} to ${endDate}. Start date must be before or equal to end date.`,
     );
   }
 
-  const series = AMBITO_SERIES_BY_HOUSE[parsedCasa];
-  return `${AMBITO_DOLAR_BASE_URL}/${series}/historico-general/${parsedStartDate}/${parsedEndDate}`;
+  const route = AMBITO_ROUTE_BY_HOUSE[parsedCasa];
+  return `${AMBITO_BASE_URL}/${route}/historico-general/${startDate}/${endDate}`;
 }
 
 export function formatAmbitoHistoricalDataToDolarApiFormat(
   ambitoData: unknown,
   casa: HouseName,
 ): DolarApiRate[] {
-  const [, ...rows] = ambitoHistoricalResponseSchema.parse(ambitoData);
+  const [header, ...rows] = ambitoHistoricalResponseSchema.parse(ambitoData);
   const parsedCasa = houseNameSchema.parse(casa);
+  const singleValue =
+    parsedCasa === HOUSE_NAMES.BOLSA ||
+    parsedCasa === HOUSE_NAMES.CONTADO_CON_LIQUI ||
+    parsedCasa === HOUSE_NAMES.TARJETA;
+
+  if (header.length !== (singleValue ? 2 : 3)) {
+    throw new Error(`Unexpected Ámbito historical payload for ${parsedCasa}`);
+  }
 
   return dolarApiRateSchema.array().parse(
-    rows.map(([fecha, compra, venta]) => ({
-      moneda: CURRENCY_NAMES.USD,
-      casa: parsedCasa,
-      nombre: HOUSE_DISPLAY_NAMES[parsedCasa],
-      compra: parseLocalizedNumber(compra),
-      venta: parseLocalizedNumber(venta),
-      fechaActualizacion: toBuenosAiresMidnightIso(fecha),
-    })),
+    rows.map((row) => {
+      const [fecha, firstValue, secondValue] = row;
+      return {
+        moneda: CURRENCY_NAMES.USD,
+        casa: parsedCasa,
+        nombre: HOUSE_DISPLAY_NAMES[parsedCasa],
+        compra: singleValue ? null : parseLocalizedNumber(firstValue),
+        venta: parseLocalizedNumber(secondValue ?? firstValue),
+        fechaActualizacion: toBuenosAiresMidnightIso(fecha),
+      };
+    }),
   );
 }

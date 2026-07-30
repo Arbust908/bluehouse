@@ -39,14 +39,6 @@ export function validateValidDateFormat(date: string): boolean {
   return /^\d{2}-\d{2}-\d{4}$/.test(date) && isRealDate(date, "-");
 }
 
-/**
- * This should be used to validate dates that are sent to Ambito's API. Ambito expects dates in the format "dd-mm-yyyy", and this schema ensures that the date is in that format and represents a real calendar date.
- */
-export const ambitoRequestDateSchema = z
-  .string()
-  .regex(/^\d{2}-\d{2}-\d{4}$/)
-  .refine((date) => isRealDate(date, "-"), "Invalid calendar date");
-
 export function validateDateRange(startDate: string, endDate: string): boolean {
   if (!validateValidDateFormat(startDate) || !validateValidDateFormat(endDate)) {
     return false;
@@ -72,10 +64,15 @@ const localizedNonNegativeNumberSchema = z
     "Expected a non-negative localized number",
   );
 
-const ambitoHistoricalHeaderSchema = z.tuple([
-  z.literal("Fecha"),
-  z.literal("Compra"),
-  z.literal("Venta"),
+const ambitoHistoricalThreeColumnHeaderSchema = z.tuple([
+  z.string().min(1),
+  z.string().min(1),
+  z.string().min(1),
+]);
+
+const ambitoHistoricalTwoColumnHeaderSchema = z.tuple([
+  z.string().min(1),
+  z.string().min(1),
 ]);
 
 const ambitoHistoricalRateRowSchema = z.tuple([
@@ -84,9 +81,19 @@ const ambitoHistoricalRateRowSchema = z.tuple([
   localizedNonNegativeNumberSchema,
 ]);
 
-export const ambitoHistoricalResponseSchema = z
-  .tuple([ambitoHistoricalHeaderSchema])
-  .rest(ambitoHistoricalRateRowSchema);
+const ambitoHistoricalSingleValueRowSchema = z.tuple([
+  ambitoDateSchema,
+  localizedNonNegativeNumberSchema,
+]);
+
+export const ambitoHistoricalResponseSchema = z.union([
+  z
+    .tuple([ambitoHistoricalThreeColumnHeaderSchema])
+    .rest(ambitoHistoricalRateRowSchema),
+  z
+    .tuple([ambitoHistoricalTwoColumnHeaderSchema])
+    .rest(ambitoHistoricalSingleValueRowSchema),
+]);
 
 export type AmbitoHistoricalResponse = z.infer<
   typeof ambitoHistoricalResponseSchema

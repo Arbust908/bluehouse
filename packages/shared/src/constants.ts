@@ -45,17 +45,17 @@ export type RunType = (typeof RUN_TYPE)[keyof typeof RUN_TYPE];
 
 
 export const DOLAR_API_URL = "https://dolarapi.com/v1/dolares";
-export const AMBITO_DOLAR_BASE_URL = "https://mercados.ambito.com/dolar";
+export const AMBITO_BASE_URL = "https://mercados.ambito.com";
 export const AMBITO_TIME_ZONE = "America/Argentina/Buenos_Aires";
 
-export const AMBITO_SERIES_BY_HOUSE = {
-  oficial: "oficial",
-  blue: "informal",
-  bolsa: "mep",
-  contadoconliqui: "contadoconliqui",
-  mayorista: "mayorista",
-  cripto: "cripto",
-  tarjeta: "turista",
+export const AMBITO_ROUTE_BY_HOUSE = {
+  oficial: "dolar/oficial",
+  blue: "dolar/informal",
+  bolsa: "dolarrava/mep",
+  contadoconliqui: "dolarrava/cl",
+  mayorista: "dolar/mayorista",
+  cripto: "dolarcripto",
+  tarjeta: "dolarturista",
 } as const satisfies Record<HouseName, string>;
 
 export const POLL_STATUS = {
@@ -67,4 +67,4 @@ export const POLL_STATUS = {
 
 export type PollStatus = (typeof POLL_STATUS)[keyof typeof POLL_STATUS];
 
-export const AMBITO_HISTORY_START_DATE = "2002-01-01";
+export const AMBITO_HISTORY_START_DATE = "2002-01-11";
