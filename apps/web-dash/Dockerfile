@@ -12,8 +12,7 @@ COPY apps/web-dash ./apps/web-dash
 COPY packages/shared ./packages/shared
 
 ENV NITRO_PRESET=bun
-ENV NODE_OPTIONS=--max-old-space-size=512
-RUN bun run --smol --cwd apps/web-dash build
+RUN bun run --cwd apps/web-dash build
 
 # Stage 3: runtime
 FROM oven/bun:1-slim AS runtime
