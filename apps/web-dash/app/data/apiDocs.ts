@@ -197,8 +197,8 @@ export const ambitoDocs: EndpointDoc[] = (Object.entries(AMBITO_ROUTE_BY_HOUSE) 
     summary: `Returns Ámbito's historical ${HOUSE_DISPLAY_NAMES[house].toLocaleLowerCase('es-AR')} series for an inclusive date range.`,
     status: 'upstream',
     parameters: [
-      { name: 'startDate', type: 'YYYY-MM-DD', required: true, defaultValue: '2026-06-01', description: 'Inclusive first date. BlueHouse accepts ISO dates and converts them for Ámbito.' },
-      { name: 'endDate', type: 'YYYY-MM-DD', required: true, defaultValue: '2026-06-12', description: 'Inclusive last date.' },
+      { name: 'startDate', type: 'DD-MM-YYYY', required: true, defaultValue: '01-06-2026', description: 'Inclusive first date in Ámbito’s URL format.' },
+      { name: 'endDate', type: 'DD-MM-YYYY', required: true, defaultValue: '12-06-2026', description: 'Inclusive last date in Ámbito’s URL format.' },
     ],
     responseFields: ambitoResponseFields,
     responseExample: singleValue
