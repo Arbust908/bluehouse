@@ -1,13 +1,13 @@
 <template>
   <main class="mx-auto w-full max-w-6xl px-5 pt-10 sm:px-8 sm:pt-14">
     <div v-if="error" role="alert"
-      class="mb-8 rounded-md border border-indigo-500 bg-(--color-accent-soft) px-4 py-3 text-sm">
+      class="mb-8 rounded-md border border-indigo-500 bg-indigo-100 px-4 py-3 text-sm dark:bg-indigo-900/50">
       No pudimos cargar las cotizaciones. Intentá nuevamente en unos minutos.
     </div>
 
     <section aria-labelledby="page-title" class="space-y-6">
       <div>
-        <h1 id="page-title" class="text-3xl font-semibold leading-[1.08] tracking-[-0.045em] sm:text-4xl">
+        <h1 id="page-title" class="text-3xl font-semibold leading-tight tracking-tighter sm:text-4xl">
           El dólar, sin ruido.
         </h1>
         <p class="mt-3 text-sm text-zinc-500 dark:text-slate-500 sm:text-base">
@@ -21,7 +21,7 @@
     <section class="mt-14 sm:mt-20" aria-labelledby="history-title">
       <div class="mb-5">
         <p class="text-xs font-semibold uppercase tracking-tight text-zinc-500 dark:text-slate-500">Historia</p>
-        <h2 id="history-title" class="mt-1 text-xl font-semibold tracking-[-0.03em] sm:text-2xl">Evolución de
+        <h2 id="history-title" class="mt-1 text-xl font-semibold tracking-tight sm:text-2xl">Evolución de
           cotizaciones</h2>
         <p class="mt-2 text-sm text-zinc-500 dark:text-slate-500">Cada cambio observado, manteniendo el último valor
           conocido de
@@ -30,10 +30,7 @@
       <div v-if="chartData.length" class="py-5 sm:py-7">
         <ul class="mb-5 flex flex-wrap gap-x-4 gap-y-2 text-xs text-zinc-500 dark:text-slate-500"
           aria-label="Series del gráfico">
-          <li v-for="item in chartLegend" :key="item.name" class="flex items-center gap-1.5">
-            <span class="size-2 rounded-full" :style="{ backgroundColor: item.color }" />
-            {{ item.name }}
-          </li>
+          <ChartLegendItem v-for="item in chartLegend" :key="item.name" :item="item" />
         </ul>
         <div class="min-h-96">
           <LineChart :data="chartData" :categories="chartCategories" :height="360" :x-formatter="xFormatter"

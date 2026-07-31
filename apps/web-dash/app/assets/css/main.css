@@ -3,15 +3,9 @@
 @custom-variant dark (&:where(.dark, .dark *));
 
 :root {
-  color-scheme: light dark;
-  --color-paper: oklch(97% 0.008 75);
-  --color-surface: oklch(99% 0.004 75);
-  --color-ink: oklch(24% 0.018 65);
-  --color-muted: oklch(51% 0.018 65);
-  --color-rule: oklch(88% 0.014 72);
-  --color-accent: oklch(58% 0.18 285);
-  --color-accent-soft: oklch(94% 0.035 285);
-  --color-positive: oklch(56% 0.1 155);
+  color-scheme: light;
+  --color-muted: light-dark(var(--color-zinc-500), var(--color-slate-400));
+  --color-rule: light-dark(var(--color-zinc-300), var(--color-slate-600));
   --vis-axis-grid-color: var(--color-rule) !important;
   --vis-axis-tick-label-color: var(--color-muted) !important;
   --vis-axis-label-color: var(--color-muted) !important;
@@ -20,14 +14,7 @@
 }
 
 html.dark {
-  --color-paper: oklch(18% 0.012 65);
-  --color-surface: oklch(22% 0.014 65);
-  --color-ink: oklch(93% 0.008 75);
-  --color-muted: oklch(70% 0.012 70);
-  --color-rule: oklch(32% 0.014 65);
-  --color-accent: oklch(72% 0.15 285);
-  --color-accent-soft: oklch(30% 0.065 285);
-  --color-positive: oklch(68% 0.1 155);
+  color-scheme: dark;
 }
 
 html, body, #__nuxt {
@@ -36,8 +23,6 @@ html, body, #__nuxt {
 
 body {
   margin: 0;
-  background: var(--color-paper);
-  color: var(--color-ink);
   font-family: "Space Grotesk", ui-sans-serif, system-ui, sans-serif;
   text-rendering: optimizeLegibility;
 }
@@ -47,13 +32,9 @@ body {
   transition: background-color 180ms cubic-bezier(0.16, 1, 0.3, 1), color 180ms cubic-bezier(0.16, 1, 0.3, 1);
 }
 
-::selection {
-  background: var(--color-accent-soft);
-  color: var(--color-ink);
-}
 
 :focus-visible {
-  outline: 2px solid var(--color-accent);
+  outline: 2px solid currentColor;
   outline-offset: 3px;
 }
 

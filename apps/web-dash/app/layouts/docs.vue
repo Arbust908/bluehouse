@@ -8,7 +8,7 @@
           <button type="button" class="grid size-10 place-items-center rounded-md text-zinc-500 hover:bg-indigo-100 hover:text-zinc-800 focus-visible:outline-indigo-600 dark:text-slate-500 dark:hover:bg-indigo-900/50 dark:hover:text-slate-200 lg:hidden" aria-label="Open navigation" @click="sidebarOpen = true">
             <PhList :size="20" />
           </button>
-          <NuxtLink to="/docs" class="text-xs font-[650] text-zinc-500 focus-visible:outline-indigo-600 dark:text-slate-500 lg:hidden">Documentation</NuxtLink>
+          <NuxtLink to="/docs" class="text-xs font-semibold text-zinc-500 focus-visible:outline-indigo-600 dark:text-slate-500 lg:hidden">Documentation</NuxtLink>
           <div class="ml-auto flex items-center gap-2">
             <NuxtLink to="/" class="inline-flex min-h-10 items-center rounded-md px-3 text-xs font-medium text-zinc-500 hover:bg-indigo-100 hover:text-zinc-800 focus-visible:outline-indigo-600 dark:text-slate-500 dark:hover:bg-indigo-900/50 dark:hover:text-slate-200">View rates</NuxtLink>
             <ClientOnly><ThemeController /></ClientOnly>
